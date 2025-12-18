@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+
+# Virtual env
+.venv/
+env/
+venv/
+
+# Logs
+logs/
+*.log
+
+# Editor
+.vscode/
+.idea/
+
+# Mac
+.DS_Store
+
+# Data directories (user content, not code)
+downloads/
+transcripts/
+temp/
+
+# Index files (generated, contain user data)
+*_index.json

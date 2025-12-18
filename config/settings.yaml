@@ -1,0 +1,26 @@
+# YWW Configuration
+# Optimized for transcription-first workflow on M1 Mac
+
+# Audio extraction (temp files, auto-cleaned)
+audio_format: "bestaudio[ext=webm]/bestaudio[ext=m4a]/bestaudio"
+temp_dir: "./temp"
+
+# Transcript storage (permanent)
+transcripts_dir: "./transcripts"
+output_format: "srt"  # srt (with timestamps), txt, or vtt
+keep_audio: false     # Delete audio after transcription by default
+
+# Transcription settings
+transcription_model: "small"      # tiny, base, small, medium, large
+transcription_language: "auto"    # auto or language code (en, fr, etc.)
+transcription_backend: "faster-whisper"  # faster-whisper or whisper
+transcription_compute_type: "int8"       # int8, int8_float16, float16
+
+# Performance (M1 optimized)
+extract_workers: 3    # I/O bound - can run several
+transcribe_workers: 1 # CPU/GPU bound - limit to 1 on M1
+
+# Misc
+max_retries: 3
+max_playlist_items: 25
+logging_level: "INFO"

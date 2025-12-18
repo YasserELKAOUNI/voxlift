@@ -1,0 +1,38 @@
+[tool.poetry]
+name = "youtube-whisper-wrapper"
+version = "0.1.0"
+description = "Wrapper yt-dlp + Whisper"
+authors = ["Yasser <yasser@example.com>"]
+readme = "README.md"
+package-mode = true
+
+[tool.poetry.dependencies]
+python = "^3.10"
+# Keep yt-dlp modern but not future-dated
+yt-dlp = ">=2024.03.10,<2026.0.0"
+# Keep OpenAI Whisper for now (simple, CPU-friendly); faster-whisper can be added later
+openai-whisper = ">=20230918,<2026.0.0"
+# torch is optional depending on whisper backend; not strictly needed for faster-whisper
+torch = ">=2.2.0,<3.0.0"
+# Faster inference backend (CTranslate2) - better on Apple Silicon with int8/float16
+faster-whisper = ">=1.0.0,<1.1.0"
+# Optional helpers for CLI/UX
+typer = {version = ">=0.12.3,<0.13.0", extras = ["all"]}
+rich = ">=13.7.1,<14.0.0"
+PyYAML = ">=6.0.1,<7.0.0"
+fastapi = ">=0.115.0,<0.116.0"
+uvicorn = {version=">=0.32.0,<0.33.0", extras=["standard"]}
+
+[tool.poetry.scripts]
+yww = "yww.cli:main"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.5"
+black = "^25.1.0"
+flake8 = "^7.2.0"
+mypy = "^1.15.0"
+pre-commit = "^4.2.0"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"

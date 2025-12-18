@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>YWW - YouTube Transcriber</title>
+  <link rel="stylesheet" href="/static/css/app.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar - Jobs List -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-title">Jobs</div>
+      </div>
+      <div class="jobs-list" id="jobs-list">
+        <div class="empty-state">
+          <div class="empty-state-icon">&#128196;</div>
+          <div class="empty-state-title">No jobs yet</div>
+          <div>Paste a YouTube URL to get started</div>
+        </div>
+      </div>
+      <div class="sidebar-subheader">
+        <div>History</div>
+        <button class="link-btn small" onclick="App.history=[]; localStorage.removeItem('yww_history'); App.renderHistory()">Clear</button>
+      </div>
+      <div class="history-list" id="history-list"></div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <div class="content-scroll">
+        <div class="content-inner">
+
+          <!-- Hero View - Primary Action -->
+          <div id="hero-view" class="hero">
+            <h1 class="hero-title">YouTube to Transcript</h1>
+            <p class="hero-subtitle">Paste a link, get a transcript. Local, private, fast.</p>
+
+            <!-- URL Input - Primary CTA -->
+            <div class="url-input-container">
+              <input
+                type="url"
+                id="url-input"
+                class="url-input"
+                placeholder="Paste YouTube URL..."
+                autocomplete="off"
+                autofocus
+              >
+              <button id="transcribe-btn" class="url-input-btn">Transcribe</button>
+            </div>
+
+            <!-- Timestamp Toggle -->
+            <div class="timestamp-row">
+              <button id="timestamp-toggle" class="timestamp-toggle-btn">
+                <span class="clock-icon">&#128337;</span>
+                Transcribe specific time range
+              </button>
+            </div>
+
+            <!-- Timestamp Panel -->
+            <div id="timestamp-panel" class="timestamp-panel">
+              <div class="timestamp-inputs">
+                <div class="setting-group">
+                  <label class="setting-label">Start Time</label>
+                  <input
+                    type="text"
+                    id="start-time"
+                    class="timestamp-input"
+                    placeholder="e.g. 0:30 or 1:45:00"
+                  >
+                </div>
+                <div class="setting-group">
+                  <label class="setting-label">End Time <span class="optional">(optional)</span></label>
+                  <input
+                    type="text"
+                    id="end-time"
+                    class="timestamp-input"
+                    placeholder="e.g. 5:00 or leave empty"
+                  >
+                </div>
+              </div>
+              <p class="timestamp-hint">
+                Formats: <code>MM:SS</code>, <code>HH:MM:SS</code>, or seconds (e.g. <code>90</code>)
+              </p>
+            </div>
+
+            <!-- Quick Settings -->
+            <div class="quick-settings">
+              <div class="setting-group">
+                <label class="setting-label">Quality</label>
+                <select id="model-select" class="setting-select">
+                  <option value="Fast" selected>Fast</option>
+                  <option value="Balanced">Balanced</option>
+                  <option value="Best">Best</option>
+                </select>
+              </div>
+              <div class="setting-group">
+                <label class="setting-label">Language</label>
+                <select id="lang-select" class="setting-select">
+                  <option value="auto" selected>Auto-detect</option>
+                  <option value="en">English</option>
+                  <option value="fr">French</option>
+                  <option value="es">Spanish</option>
+                  <option value="de">German</option>
+                  <option value="ja">Japanese</option>
+                  <option value="zh">Chinese</option>
+                  <option value="ar">Arabic</option>
+                  <option value="pt">Portuguese</option>
+                  <option value="ru">Russian</option>
+                  <option value="ko">Korean</option>
+                  <option value="it">Italian</option>
+                  <option value="nl">Dutch</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Output folder -->
+            <div class="output-row">
+              <span>Output:</span>
+              <span id="output-path" class="output-path" data-path="{{OUTPUT_PATH}}" title="{{OUTPUT_PATH}}">{{OUTPUT_PATH_DISPLAY}}</span>
+              <button class="link-btn" onclick="App.chooseFolder()">Choose...</button>
+              <button class="link-btn" onclick="App.revealOutputFolder()">Reveal</button>
+              <!-- Hidden file input for native folder picker -->
+              <input type="file" id="folder-picker" webkitdirectory style="display: none;" onchange="App.onFolderSelected(event)">
+            </div>
+
+            <!-- Advanced Toggle -->
+            <div class="advanced-toggle">
+              <button id="advanced-toggle" class="advanced-toggle-btn">
+                <span class="chevron">&#9662;</span>
+                Advanced Options
+              </button>
+            </div>
+
+            <!-- Advanced Panel -->
+            <div id="advanced-panel" class="advanced-panel">
+              <div class="setting-group" style="margin-bottom: var(--space-4);">
+                <label class="setting-label">Whisper Model</label>
+                <select id="model-advanced" class="setting-select" style="width: 100%;">
+                  <option value="tiny">Tiny (fastest, least accurate)</option>
+                  <option value="base">Base (balanced)</option>
+                  <option value="small" selected>Small (better accuracy)</option>
+                  <option value="medium">Medium (high accuracy, slow)</option>
+                  <option value="large">Large (best accuracy, very slow)</option>
+                </select>
+              </div>
+              <div class="setting-group" style="margin-bottom: var(--space-4);">
+                <label class="checkbox-label">
+                  <input type="checkbox" id="force-checkbox">
+                  <span>Force re-transcription (ignore cache)</span>
+                </label>
+              </div>
+              <div class="setting-group" style="margin-bottom: var(--space-4);">
+                <label class="setting-label">Output Format</label>
+                <select id="format-select" class="setting-select" style="width: 100%;">
+                  <option value="srt" selected>Subtitles (.srt)</option>
+                  <option value="txt">Plain Text (.txt)</option>
+                  <option value="vtt">WebVTT (.vtt)</option>
+                </select>
+              </div>
+              <div class="setting-group">
+                <label class="checkbox-label">
+                  <input type="checkbox" id="keep-audio-checkbox">
+                  <span>Keep audio file (don't delete after transcription)</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Job Detail View -->
+          <div id="job-detail-view" class="job-detail hidden">
+            <!-- Populated by JS -->
+          </div>
+
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Drop Overlay -->
+  <div id="drop-overlay" class="drop-overlay">
+    <div class="drop-message">Drop YouTube URL here</div>
+  </div>
+
+  <!-- Context Menu -->
+  <div id="context-menu" class="context-menu"></div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="toast"></div>
+
+  <!-- Folder Modal -->
+  <div id="folder-modal" class="modal-overlay" onclick="if(event.target === this) App.closeFolderModal()">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">Choose Output Folder</h3>
+      </div>
+      <div class="modal-body">
+        <p class="modal-hint">Enter the full path where transcripts will be saved:</p>
+        <input type="text" id="folder-path-input" class="modal-input" placeholder="/Users/you/Documents/Transcripts" onkeydown="if(event.key === 'Enter') App.confirmFolder()">
+        <div class="modal-suggestions">
+          <div class="suggestion-label">Quick options</div>
+          <div class="suggestion-buttons" id="folder-suggestions">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="modal-btn modal-btn-cancel" onclick="App.closeFolderModal()">Cancel</button>
+        <button class="modal-btn modal-btn-confirm" onclick="App.confirmFolder()">Select</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Keyboard Shortcuts Hint -->
+  <div class="shortcuts-hint">
+    <div class="shortcut">
+      <span class="kbd">&#8984;L</span>
+      <span>Focus URL</span>
+    </div>
+    <div class="shortcut">
+      <span class="kbd">&#8984;K</span>
+      <span>New</span>
+    </div>
+    <div class="shortcut">
+      <span class="kbd">&#8984;T</span>
+      <span>Time Range</span>
+    </div>
+    <div class="shortcut">
+      <span class="kbd">&#8984;O</span>
+      <span>Open Folder</span>
+    </div>
+  </div>
+
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

@@ -1,48 +1,105 @@
-YWW – YouTube → Transcript (Mac)
+# Voxlift
 
-Overview
-- Paste a YouTube URL → audio-only download → local Whisper transcription → transcript.txt.
-- Works via a CLI (`yww`) and a local web app (http://127.0.0.1:8787).
-- Idempotent (resume/skip), safe filenames, JSON index for quick lookup.
+**Privacy-first local YouTube transcription for Mac**
 
-Quick Start
-- Create venv: `python3 -m venv .venv && source .venv/bin/activate`
-- Install deps: `pip install -U pip && pip install yt-dlp PyYAML rich typer openai-whisper torch fastapi 'uvicorn[standard]'`
-- Run CLI help: `PYTHONPATH=src python -m yww.cli --help`
-- Web app: `PYTHONPATH=src python -m yww.cli web -p 8787`
+Paste a YouTube URL, get a transcript. No cloud, no data leaving your machine.
 
-CLI Examples
-- Process one URL: `PYTHONPATH=src python -m yww.cli process -u "<YOUTUBE_URL>" -o "~/Documents/Transcripts" -m base -l auto`
-- Progress as NDJSON: add `--json`.
-- Open transcript folder on completion: add `--open`.
+## Features
 
-Outputs
-- Layout: `<out>/<uploader>/<title> [id]/transcript.txt`
-- Index: `<out>/index.json` records all processed items.
+- **Local processing**: Whisper runs on your Mac (MPS/Metal acceleration on M1/M2)
+- **Minimal bandwidth**: Audio-only extraction, smallest format (opus/webm)
+- **Clean storage**: Transcripts only, temp files auto-deleted
+- **Multiple formats**: SRT (default), VTT, plain text
+- **Time range support**: Transcribe specific portions of videos
+- **Full-text search**: Index stores complete transcript text
 
-Web UI (V1.1)
-- Paste URL, choose model/language/output, click Transcribe.
-- Jobs show status and “Open transcript” link when done.
-- Search: point to an output folder, search existing items, and transcribe a specific time range of a file.
+## Quick Start
 
-Segment Transcription (Range)
-- From the web app (Search section), pick an existing file and enter a time range (e.g., `00:03:00` → `00:05:30`).
-- The app extracts the segment via FFmpeg and transcribes only that slice.
+```bash
+# Clone and setup
+git clone https://github.com/YOUR_USERNAME/voxlift.git
+cd voxlift
+python3 -m venv .venv && source .venv/bin/activate
+pip install poetry && poetry install
 
-LLM Enhancements (Optional)
-- Set `OPENAI_API_KEY` in your environment.
-- From the UI or API, request: summary, highlights, chapters (written as `notes.md` next to the transcript).
+# Run web UI
+python -m src.yww.webapp
+# Open http://localhost:8765
+```
 
-Config
-- YAML: `config/settings.yaml` (defaults: output folder, language, model, logging).
-- CLI flags override YAML.
+## Requirements
 
-Architecture
-- Modules: `downloader` (yt-dlp), `transcriber` (Whisper), `storage` (artifacts + index), `media` (FFmpeg helpers), `orchestrator` (pipeline), `webapp` (FastAPI), `cli` (Typer).
-- Pipeline: URL → audio-only download → transcribe → write files → update index.
-- Web server exposes `/api/process`, `/api/jobs/{id}`, `/api/index`, `/api/transcribe-range`, `/api/enhance`.
+- macOS (optimized for Apple Silicon M1/M2)
+- Python 3.11+
+- FFmpeg (`brew install ffmpeg`)
 
-Notes
-- Requires FFmpeg (Homebrew `ffmpeg`).
-- Privacy-first: local processing; API key only needed for optional LLM features and never logged.
+## Usage
 
+### Web UI (Recommended)
+
+```bash
+python -m src.yww.webapp
+```
+
+Open `http://localhost:8765`, paste a YouTube URL, click Transcribe.
+
+### CLI
+
+```bash
+# Process single video
+python -m src.yww.cli process -u "https://youtube.com/watch?v=..." -m small
+
+# With time range
+python -m src.yww.cli process -u "URL" --start 1:30 --end 5:00
+```
+
+## Output
+
+```
+transcripts/
+├── index.json              # Metadata + full text (searchable)
+└── {Channel Name}/
+    └── {Video Title} [id].srt
+```
+
+## Configuration
+
+Edit `config/settings.yaml`:
+
+```yaml
+transcription_model: small    # tiny, base, small, medium, large
+output_format: srt            # srt, vtt, txt
+keep_audio: false             # Delete audio after transcription
+```
+
+## Models
+
+| Model | Speed | Accuracy | VRAM |
+|-------|-------|----------|------|
+| tiny | Fastest | Basic | ~1GB |
+| base | Fast | Good | ~1GB |
+| small | Balanced | Better | ~2GB |
+| medium | Slow | High | ~5GB |
+| large | Slowest | Best | ~10GB |
+
+## Architecture
+
+- **audio_extractor.py**: Lightweight yt-dlp wrapper, temp file management
+- **transcriber.py**: faster-whisper with MPS acceleration
+- **storage.py**: Index v2 schema with deduplication
+- **scheduler.py**: Resource-aware job pools (3 extract, 1 transcribe)
+- **webapp.py**: FastAPI + static web UI
+
+## Testing
+
+```bash
+# Run all tests (excluding slow network tests)
+pytest tests/ -m "not slow"
+
+# Run all tests including E2E
+pytest tests/ -v
+```
+
+## License
+
+MIT

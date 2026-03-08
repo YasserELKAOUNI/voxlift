@@ -1,4 +1,4 @@
-# src/yww/downloader.py
+# src/voxlift/downloader.py
 """
 YouTube downloader module using yt-dlp.
 

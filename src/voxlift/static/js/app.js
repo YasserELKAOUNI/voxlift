@@ -1,4 +1,4 @@
-// YWW - Main Application JavaScript
+// Voxlift - Main Application JavaScript
 
 const App = {
   jobs: new Map(),
@@ -22,7 +22,7 @@ const App = {
     this.setupDragAndDrop();
     this.outputPath = this.elements.outputPath?.dataset.path || '';
     this.loadSystemInfo();
-    console.log('YWW initialized');
+    console.log('Voxlift initialized');
   },
 
   async loadSystemInfo() {
@@ -1114,7 +1114,7 @@ const App = {
 
   loadHistory() {
     try {
-      const raw = localStorage.getItem('yww_history');
+      const raw = localStorage.getItem('voxlift_history') || localStorage.getItem('yww_history');
       this.history = raw ? JSON.parse(raw) : [];
       this.renderHistory();
     } catch {
@@ -1140,7 +1140,7 @@ const App = {
     };
     this.history = [entry, ...this.history].slice(0, 20);
     try {
-      localStorage.setItem('yww_history', JSON.stringify(this.history));
+      localStorage.setItem('voxlift_history', JSON.stringify(this.history));
     } catch {
       /* ignore */
     }

@@ -40,7 +40,7 @@ async def lifespan(app: FastAPI):
     log_event(
         "webapp",
         "startup",
-        "Initializing YWW Web...",
+        "Initializing Voxlift Web...",
         level="INFO",
         data={"pid": os.getpid()},
     )
@@ -67,10 +67,9 @@ async def lifespan(app: FastAPI):
 
     yield
 
-    log_event("webapp", "shutdown", "Shutting down YWW Web", level="INFO", data={"pid": os.getpid()})
+    log_event("webapp", "shutdown", "Shutting down Voxlift Web", level="INFO", data={"pid": os.getpid()})
 
-
-app = FastAPI(title="YWW Web", version="0.6.0", lifespan=lifespan)
+app = FastAPI(title="Voxlift Web", version="0.6.0", lifespan=lifespan)
 
 # Mount static files
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
@@ -164,7 +163,7 @@ def get_fallback_html(out_path: str) -> str:
 <html>
 <head>
     <meta charset="utf-8">
-    <title>YWW</title>
+    <title>Voxlift</title>
     <style>
         body {{ font-family: system-ui; background: #1a1a1c; color: #f5f5f7; padding: 40px; }}
         input, button {{ padding: 12px; font-size: 16px; }}
@@ -173,7 +172,7 @@ def get_fallback_html(out_path: str) -> str:
     </style>
 </head>
 <body>
-    <h1>YWW - YouTube Transcriber</h1>
+    <h1>Voxlift - YouTube Transcriber</h1>
     <p>Static files not found. Run from project root.</p>
     <div>
         <input id="url" placeholder="Paste YouTube URL">
@@ -531,7 +530,7 @@ def api_enhance(req: EnhanceRequest):
         system_prompt = prompt_config["system"]
         user_prompt = prompt_config["user"].format(text=text)
 
-        model = os.getenv("YWW_OPENAI_MODEL", "gpt-4o-mini")
+        model = os.getenv("VOXLIFT_OPENAI_MODEL") or os.getenv("YWW_OPENAI_MODEL", "gpt-4o-mini")
         resp = client.chat.completions.create(
             model=model,
             messages=[

@@ -16,7 +16,7 @@ pip install poetry && poetry install
 Verify installation:
 
 ```bash
-python -m src.yww.cli --version
+voxlift --version
 ```
 
 ---
@@ -26,13 +26,13 @@ python -m src.yww.cli --version
 Transcribe a video in one command:
 
 ```bash
-python -m src.yww.cli transcribe "https://youtube.com/watch?v=dQw4w9WgXcQ"
+voxlift transcribe "https://youtube.com/watch?v=dQw4w9WgXcQ"
 ```
 
 Or start the web UI:
 
 ```bash
-python -m src.yww.cli serve
+voxlift serve
 ```
 
 ---
@@ -44,7 +44,7 @@ python -m src.yww.cli serve
 Transcribe a YouTube video to text.
 
 ```bash
-python -m src.yww.cli transcribe [OPTIONS] URL
+voxlift transcribe [OPTIONS] URL
 ```
 
 **Arguments:**
@@ -72,22 +72,22 @@ python -m src.yww.cli transcribe [OPTIONS] URL
 
 ```bash
 # Basic transcription
-python -m src.yww.cli transcribe "https://youtube.com/watch?v=..."
+voxlift transcribe "https://youtube.com/watch?v=..."
 
 # Use medium model with English language
-python -m src.yww.cli transcribe URL -m medium -l en
+voxlift transcribe URL -m medium -l en
 
 # Transcribe only a specific time range
-python -m src.yww.cli transcribe URL --start 1:30 --end 5:00
+voxlift transcribe URL --start 1:30 --end 5:00
 
 # Output as plain text instead of SRT
-python -m src.yww.cli transcribe URL --format txt
+voxlift transcribe URL --format txt
 
 # Quiet mode for scripts
-python -m src.yww.cli transcribe URL -q
+voxlift transcribe URL -q
 
 # JSON output for automation
-python -m src.yww.cli transcribe URL --json
+voxlift transcribe URL --json
 ```
 
 ---
@@ -97,7 +97,7 @@ python -m src.yww.cli transcribe URL --json
 Start the web UI server.
 
 ```bash
-python -m src.yww.cli serve [OPTIONS]
+voxlift serve [OPTIONS]
 ```
 
 **Options:**
@@ -112,16 +112,16 @@ python -m src.yww.cli serve [OPTIONS]
 
 ```bash
 # Start with default settings (opens browser)
-python -m src.yww.cli serve
+voxlift serve
 
 # Custom port
-python -m src.yww.cli serve --port 9000
+voxlift serve --port 9000
 
 # Don't open browser
-python -m src.yww.cli serve --no-browser
+voxlift serve --no-browser
 
 # Listen on all interfaces
-python -m src.yww.cli serve --host 0.0.0.0
+voxlift serve --host 0.0.0.0
 ```
 
 ---
@@ -131,7 +131,7 @@ python -m src.yww.cli serve --host 0.0.0.0
 List all transcripts in the index.
 
 ```bash
-python -m src.yww.cli list [OPTIONS]
+voxlift list [OPTIONS]
 ```
 
 **Options:**
@@ -145,13 +145,13 @@ python -m src.yww.cli list [OPTIONS]
 
 ```bash
 # List recent transcripts
-python -m src.yww.cli list
+voxlift list
 
 # Show more items
-python -m src.yww.cli list -n 50
+voxlift list -n 50
 
 # Use custom directory
-python -m src.yww.cli list -o ~/Documents/MyTranscripts
+voxlift list -o ~/Documents/MyTranscripts
 ```
 
 ---
@@ -161,7 +161,7 @@ python -m src.yww.cli list -o ~/Documents/MyTranscripts
 Search within transcript contents.
 
 ```bash
-python -m src.yww.cli search [OPTIONS] QUERY
+voxlift search [OPTIONS] QUERY
 ```
 
 **Arguments:**
@@ -181,10 +181,10 @@ python -m src.yww.cli search [OPTIONS] QUERY
 
 ```bash
 # Search for a phrase
-python -m src.yww.cli search "machine learning"
+voxlift search "machine learning"
 
 # Limit results
-python -m src.yww.cli search "hello world" -n 5
+voxlift search "hello world" -n 5
 ```
 
 ---
@@ -194,7 +194,7 @@ python -m src.yww.cli search "hello world" -n 5
 Display system information and configuration status.
 
 ```bash
-python -m src.yww.cli info
+voxlift info
 ```
 
 **Output includes:**
@@ -213,7 +213,7 @@ python -m src.yww.cli info
 Open the transcripts folder in Finder.
 
 ```bash
-python -m src.yww.cli open-folder [OPTIONS]
+voxlift open-folder [OPTIONS]
 ```
 
 **Options:**
@@ -283,7 +283,7 @@ The index file contains metadata and full transcript text for search functionali
 For scripting and automation, use `--json`:
 
 ```bash
-python -m src.yww.cli transcribe URL --json
+voxlift transcribe URL --json
 ```
 
 **Success response:**
@@ -317,13 +317,13 @@ Enable tab completion for your shell:
 
 ```bash
 # Bash
-python -m src.yww.cli --install-completion bash
+voxlift --install-completion bash
 
 # Zsh
-python -m src.yww.cli --install-completion zsh
+voxlift --install-completion zsh
 
 # Fish
-python -m src.yww.cli --install-completion fish
+voxlift --install-completion fish
 ```
 
 ---
@@ -353,7 +353,7 @@ python -m src.yww.cli --install-completion fish
 ```bash
 # Process multiple URLs
 for url in "URL1" "URL2" "URL3"; do
-  python -m src.yww.cli transcribe "$url" -q
+  voxlift transcribe "$url" -q
 done
 ```
 
@@ -361,14 +361,14 @@ done
 
 ```bash
 # Transcribe only minutes 5-10
-python -m src.yww.cli transcribe URL --start 5:00 --end 10:00
+voxlift transcribe URL --start 5:00 --end 10:00
 ```
 
 ### CI/CD Integration
 
 ```bash
 # JSON output for parsing
-result=$(python -m src.yww.cli transcribe URL --json)
+result=$(voxlift transcribe URL --json)
 file=$(echo "$result" | jq -r '.file')
 ```
 
@@ -404,4 +404,4 @@ brew install ffmpeg
 
 - [README.md](../README.md) — Project overview
 - [Architecture](architecture.md) — Technical documentation
-- Web UI — `python -m src.yww.cli serve`
+- Web UI — `voxlift serve`

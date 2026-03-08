@@ -1,11 +1,10 @@
 import json
 import os
-from datetime import datetime
 from typing import Any, Callable, Dict, Optional
 
-from .downloader import download_video
+from .audio_extractor import cleanup_temp_file, extract_audio
 from .logging_manager import init_logger, log_event
-from .storage import update_index
+from .storage import sanitize_filename, save_transcript
 from .transcriber import transcribe_audio
 from .media import extract_segment, parse_timecode
 
@@ -41,8 +40,6 @@ def process_url(
     # Init logging once (safe to call multiple times)
     init_logger(level=config.get("logging_level", "INFO"))
 
-    archive = os.path.join(output_dir, ".ytdl-archive.txt")
-
     def progress_hook(status: Dict[str, Any]) -> None:
         ev = {
             "status": status.get("status"),
@@ -60,12 +57,6 @@ def process_url(
                 pass
         if json_events:
             _emit_json("progress", ev)
-
-    # Build yt-dlp options focused on audio-only and idempotency
-    ytdl_opts = {
-        "download_archive": archive,
-        "progress_hooks": [progress_hook] if json_events else [],
-    }
 
     if event_cb:
         try:
@@ -132,105 +123,127 @@ def process_url(
             },
         )
 
-    # 1) Download (with optional range - this downloads ONLY the needed section!)
-    file_path, info = download_video(
-        url, output_dir, config,
-        ytdl_opts=ytdl_opts,
-        progress_hook=progress_hook,
-        start_time=start_seconds,
-        end_time=end_seconds,
-    )
-    media_dir = os.path.dirname(file_path)
-    base, _ext = os.path.splitext(file_path)
-    transcript_txt = f"{base}{time_range_suffix}.txt"
+    temp_dir = config.get("temp_dir")
+    file_path: Optional[str] = None
+    transcript_path: Optional[str] = None
 
-    if event_cb:
-        try:
-            event_cb("downloaded", {"file": file_path, "range": bool(start_time)})
-        except Exception:
-            pass
-    if json_events:
-        _emit_json("downloaded", {"file": file_path})
-
-    # 2) Transcribe (idempotent)
-    # With range download, the file already contains only the needed segment
-    audio_to_transcribe = file_path
-
-    # Check for existing transcript (with time range suffix if applicable)
-    if os.path.exists(transcript_txt) and not force:
-        log_event(
-            "orchestrator",
-            "skip_transcription",
-            "Transcript already exists",
-            level="INFO",
-            data={"transcript": transcript_txt, "force": force},
+    try:
+        # 1) Extract audio to a temp file (with optional range extraction)
+        file_path, info = extract_audio(
+            url=url,
+            temp_dir=temp_dir,
+            start_time=start_seconds,
+            end_time=end_seconds,
+            progress_hook=progress_hook,
+            max_retries=config.get("max_retries", 3),
         )
-        if event_cb:
-            try:
-                event_cb("skip_transcription", {"output_file": transcript_txt})
-            except Exception:
-                pass
-        if json_events:
-            _emit_json("skip_transcription", {"output_file": transcript_txt})
-        text = open(transcript_txt, "r", encoding="utf-8").read()
-    else:
-        result = transcribe_audio(
-            audio_to_transcribe,
-            language=config.get("transcription_language", "auto"),
-            model_size=config.get("transcription_model", "base"),
-            output_format=config.get("output_format", "txt"),
-            output_dir=media_dir,
-            backend=config.get("transcription_backend", "faster-whisper"),
-            compute_type=config.get("transcription_compute_type", "int8_float16"),
-        )
-        text = result.get("text", "")
-        out_file = result.get("output_file", transcript_txt)
+        output_format = config.get("output_format", "txt")
+        video_id = info.get("id") or "unknown"
 
-        # Rename output file if we have a time range suffix
-        if time_range_suffix and out_file and out_file != transcript_txt:
-            try:
-                os.replace(out_file, transcript_txt)
-                out_file = transcript_txt
-            except Exception:
-                pass
+        uploader = info.get("uploader", "Unknown")
+        title = info.get("title", "untitled")
+        if time_range_suffix:
+            title = f"{title} {time_range_suffix}"
+
+        transcript_path = os.path.join(
+            output_dir,
+            sanitize_filename(uploader),
+            f"{sanitize_filename(title)} [{video_id}].{output_format}",
+        )
 
         if event_cb:
             try:
-                event_cb("transcribed", {"output_file": out_file, "chars": len(text)})
+                event_cb("downloaded", {"file": file_path, "range": bool(start_time)})
             except Exception:
                 pass
         if json_events:
-            _emit_json("transcribed", {"output_file": out_file, "chars": len(text)})
+            _emit_json("downloaded", {"file": file_path})
 
-    # 3) Index
-    record = {
-        "id": info.get("id"),
-        "title": info.get("title"),
-        "uploader": info.get("uploader"),
-        "webpage_url": info.get("webpage_url") or url,
-        "file": file_path,
-        "transcript": transcript_txt,
-        "duration": info.get("duration"),
-        "language": config.get("transcription_language", "auto"),
-        "created_at": datetime.utcnow().isoformat() + "Z",
-    }
-    update_index(record)
+        # 2) Transcribe (idempotent)
+        if os.path.exists(transcript_path) and not force:
+            log_event(
+                "orchestrator",
+                "skip_transcription",
+                "Transcript already exists",
+                level="INFO",
+                data={"transcript": transcript_path, "force": force},
+            )
+            if event_cb:
+                try:
+                    event_cb("skip_transcription", {"output_file": transcript_path})
+                except Exception:
+                    pass
+            if json_events:
+                _emit_json("skip_transcription", {"output_file": transcript_path})
+            text = open(transcript_path, "r", encoding="utf-8").read()
+            language = config.get("transcription_language", "auto")
+        else:
+            result = transcribe_audio(
+                file_path,
+                language=config.get("transcription_language", "auto"),
+                model_size=config.get("transcription_model", "base"),
+                output_format=output_format,
+                output_dir=None,
+                backend=config.get("transcription_backend", "faster-whisper"),
+                compute_type=config.get("transcription_compute_type", "int8"),
+            )
+            text = result.get("text", "")
+            transcript_path = save_transcript(
+                video_id=video_id,
+                text=text,
+                segments=result.get("segments", []),
+                metadata={
+                    "title": title,
+                    "uploader": uploader,
+                    "webpage_url": info.get("webpage_url") or url,
+                    "url": url,
+                    "duration": info.get("duration"),
+                    "language": result.get("language", config.get("transcription_language", "auto")),
+                    "model": config.get("transcription_model", "base"),
+                },
+                output_format=output_format,
+                transcripts_dir=output_dir,
+            )
+            language = result.get("language", config.get("transcription_language", "auto"))
+
+            if event_cb:
+                try:
+                    event_cb("transcribed", {"output_file": transcript_path, "chars": len(text)})
+                except Exception:
+                    pass
+            if json_events:
+                _emit_json("transcribed", {"output_file": transcript_path, "chars": len(text)})
+
+        result_meta = {
+            "id": video_id,
+            "title": title,
+            "uploader": uploader,
+            "webpage_url": info.get("webpage_url") or url,
+            "file": file_path,
+            "transcript": transcript_path,
+            "duration": info.get("duration"),
+            "language": language,
+        }
+    finally:
+        if file_path and not config.get("keep_audio", False):
+            cleanup_temp_file(file_path)
+
     if event_cb:
         try:
-            event_cb("indexed", {"index_record": record})
+            event_cb("indexed", {"index_record": result_meta})
         except Exception:
             pass
     if json_events:
-        _emit_json("indexed", {"index_record": record})
+        _emit_json("indexed", {"index_record": result_meta})
     log_event(
         "orchestrator",
         "done",
         "Job finished",
         level="INFO",
-        data={"transcript": transcript_txt, "id": record.get("id")},
+        data={"transcript": result_meta["transcript"], "id": result_meta.get("id")},
     )
 
-    return {"file": file_path, "transcript": transcript_txt, "meta": record}
+    return {"file": file_path, "transcript": result_meta["transcript"], "meta": result_meta}
 
 
 def transcribe_range(

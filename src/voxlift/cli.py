@@ -248,9 +248,9 @@ def transcribe(
             task = progress.add_task(f"Using {model} model...", total=None)
 
             result = transcribe_audio(
-                audio_path=temp_file,
-                model_name=model,
-                language=None if lang == "auto" else lang,
+                file_path=temp_file,
+                model_size=model,
+                language=lang if lang != "auto" else "auto",
             )
             progress.update(task, description="Transcription complete")
 

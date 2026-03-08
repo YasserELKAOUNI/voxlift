@@ -1,6 +1,6 @@
-# src/yww/storage.py
+# src/voxlift/storage.py
 """
-Storage module for YWW transcripts.
+Storage module for Voxlift transcripts.
 
 Design principles:
 1. Transcripts are the primary artifact (not media files)
@@ -11,8 +11,7 @@ Design principles:
 
 import os
 import json
-from datetime import datetime
-from pathlib import Path
+from datetime import UTC, datetime
 from typing import Any, Dict, List, Optional
 
 from .logging_manager import log_event
@@ -154,7 +153,7 @@ def save_transcript(
     )
 
     # Update index with full text (for search)
-    now = datetime.utcnow().isoformat() + "Z"
+    now = datetime.now(UTC).isoformat().replace("+00:00", "Z")
     index_data = _load_index(index_file)
 
     # Check if updating existing entry

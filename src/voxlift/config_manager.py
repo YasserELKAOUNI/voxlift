@@ -1,4 +1,4 @@
-# src/yww/config_manager.py
+# src/voxlift/config_manager.py
 
 import os
 import argparse
@@ -27,8 +27,8 @@ def build_arg_parser() -> argparse.ArgumentParser:
     Ajoute ici toutes les options dont on a parlé.
     """
     parser = argparse.ArgumentParser(
-        prog="yww",
-        description="YouTube-Whisper-Wrapper – CLI: download & transcribe YouTube videos"
+        prog="voxlift",
+        description="Voxlift CLI - local YouTube download and transcription"
     )
     parser.add_argument("--url", "-u", type=str, help="URL vidéo ou playlist YouTube")
     parser.add_argument("--download-format", "-f", type=str, help="Format de téléchargement (best, mp4, mkv, mov, bestaudio)")

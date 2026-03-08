@@ -1,6 +1,6 @@
 # tests/test_integration.py
 """
-Integration tests for YWW transcription pipeline.
+Integration tests for the Voxlift transcription pipeline.
 
 These tests verify the core functionality works end-to-end.
 Run with: pytest tests/test_integration.py -v
@@ -34,30 +34,30 @@ class TestModuleImports:
     """Test that all modules can be imported."""
 
     def test_import_audio_extractor(self):
-        from src.yww import audio_extractor
+        from voxlift import audio_extractor
         assert hasattr(audio_extractor, 'extract_audio')
         assert hasattr(audio_extractor, 'cleanup_temp_file')
 
     def test_import_storage(self):
-        from src.yww import storage
+        from voxlift import storage
         assert hasattr(storage, 'save_transcript')
         assert hasattr(storage, 'search_transcripts')
         assert hasattr(storage, 'list_transcripts')
 
     def test_import_scheduler(self):
-        from src.yww import scheduler
+        from voxlift import scheduler
         assert hasattr(scheduler, 'submit_job')
         assert hasattr(scheduler, 'get_scheduler')
         assert hasattr(scheduler, 'JobPhase')
 
     def test_import_transcriber(self):
-        from src.yww import transcriber
+        from voxlift import transcriber
         assert hasattr(transcriber, 'transcribe_audio')
         assert hasattr(transcriber, 'preload_model')
         assert hasattr(transcriber, 'get_model_info')
 
     def test_import_config_manager(self):
-        from src.yww import config_manager
+        from voxlift import config_manager
         assert hasattr(config_manager, 'load_config_file')
 
 
@@ -65,7 +65,7 @@ class TestConfigManager:
     """Test configuration loading."""
 
     def test_load_config(self):
-        from src.yww.config_manager import load_config_file
+        from voxlift.config_manager import load_config_file
         cfg = load_config_file()
 
         # Check required keys exist
@@ -74,7 +74,7 @@ class TestConfigManager:
         assert 'transcription_backend' in cfg
 
     def test_config_defaults(self):
-        from src.yww.config_manager import load_config_file
+        from voxlift.config_manager import load_config_file
         cfg = load_config_file()
 
         # Verify our new defaults
@@ -87,7 +87,7 @@ class TestStorage:
     """Test storage functions."""
 
     def test_sanitize_filename(self):
-        from src.yww.storage import sanitize_filename
+        from voxlift.storage import sanitize_filename
 
         # Test basic sanitization
         assert sanitize_filename("Hello World") == "Hello World"
@@ -101,14 +101,14 @@ class TestStorage:
         assert len(result) <= 180
 
     def test_srt_time_formatting(self):
-        from src.yww.storage import _format_srt_time
+        from voxlift.storage import _format_srt_time
 
         assert _format_srt_time(0) == "00:00:00,000"
         assert _format_srt_time(61.5) == "00:01:01,500"
         assert _format_srt_time(3661.123) == "01:01:01,123"
 
     def test_index_load_empty(self):
-        from src.yww.storage import _load_index
+        from voxlift.storage import _load_index
 
         with tempfile.NamedTemporaryFile(suffix='.json', delete=False) as f:
             temp_path = f.name
@@ -123,7 +123,7 @@ class TestStorage:
                 os.unlink(temp_path)
 
     def test_save_and_load_transcript(self):
-        from src.yww.storage import save_transcript, get_transcript, _load_index
+        from voxlift.storage import save_transcript, get_transcript, _load_index
 
         with tempfile.TemporaryDirectory() as tmpdir:
             index_file = os.path.join(tmpdir, 'index.json')
@@ -174,7 +174,7 @@ class TestMediaUtils:
     """Test media utility functions."""
 
     def test_parse_timecode(self):
-        from src.yww.media import parse_timecode
+        from voxlift.media import parse_timecode
 
         # Seconds (integer format)
         assert parse_timecode("90") == 90.0
@@ -202,7 +202,7 @@ class TestTranscriberInfo:
     """Test transcriber info functions (no actual transcription)."""
 
     def test_get_model_info(self):
-        from src.yww.transcriber import get_model_info
+        from voxlift.transcriber import get_model_info
 
         info = get_model_info()
         assert 'device' in info
@@ -210,7 +210,7 @@ class TestTranscriberInfo:
         assert 'cached_models' in info
 
     def test_device_detection(self):
-        from src.yww.transcriber import get_device
+        from voxlift.transcriber import get_device
 
         device = get_device()
         # On M1 Mac, should be 'mps' or 'cpu'
@@ -221,14 +221,14 @@ class TestAudioExtractor:
     """Test audio extractor functions (without actual download)."""
 
     def test_cleanup_nonexistent_file(self):
-        from src.yww.audio_extractor import cleanup_temp_file
+        from voxlift.audio_extractor import cleanup_temp_file
 
         # Should return False for non-existent file
         result = cleanup_temp_file("/nonexistent/path/file.webm")
         assert result == False
 
     def test_cleanup_existing_file(self):
-        from src.yww.audio_extractor import cleanup_temp_file
+        from voxlift.audio_extractor import cleanup_temp_file
 
         with tempfile.NamedTemporaryFile(delete=False) as f:
             temp_path = f.name
@@ -250,7 +250,7 @@ class TestEndToEnd:
 
     def test_audio_extraction_short_video(self):
         """Test audio extraction with a very short video."""
-        from src.yww.audio_extractor import extract_audio, cleanup_temp_file
+        from voxlift.audio_extractor import extract_audio, cleanup_temp_file
 
         with tempfile.TemporaryDirectory() as tmpdir:
             # Use a known short video

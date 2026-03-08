@@ -1,5 +1,5 @@
-# YWW Configuration
-# Optimized for transcription-first workflow on M1 Mac
+# Voxlift configuration
+# Optimized for local transcription on Apple Silicon
 
 # Audio extraction (temp files, auto-cleaned)
 audio_format: "bestaudio[ext=webm]/bestaudio[ext=m4a]/bestaudio"

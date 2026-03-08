@@ -1,21 +1,23 @@
 [tool.poetry]
-name = "youtube-whisper-wrapper"
-version = "0.1.0"
-description = "Wrapper yt-dlp + Whisper"
-authors = ["Yasser <yasser@example.com>"]
+name = "voxlift"
+version = "0.6.0"
+description = "Privacy-first local YouTube transcription"
+authors = ["Yasser EL KAOUNINI"]
 readme = "README.md"
-package-mode = true
+packages = [{include = "voxlift", from = "src"}]
 
 [tool.poetry.dependencies]
 python = "^3.10"
 # Keep yt-dlp modern but not future-dated
 yt-dlp = ">=2024.03.10,<2026.0.0"
-# Keep OpenAI Whisper for now (simple, CPU-friendly); faster-whisper can be added later
-openai-whisper = ">=20230918,<2026.0.0"
+# OpenAI Whisper (fallback, not actively used - faster-whisper is primary)
+openai-whisper = {version = "*", optional = true}
 # torch is optional depending on whisper backend; not strictly needed for faster-whisper
 torch = ">=2.2.0,<3.0.0"
 # Faster inference backend (CTranslate2) - better on Apple Silicon with int8/float16
-faster-whisper = ">=1.0.0,<1.1.0"
+faster-whisper = ">=1.1.0"
+# PyAV for audio processing (needs >=14 for FFmpeg 7 compatibility)
+av = ">=14.0.0"
 # Optional helpers for CLI/UX
 typer = {version = ">=0.12.3,<0.13.0", extras = ["all"]}
 rich = ">=13.7.1,<14.0.0"
@@ -24,7 +26,8 @@ fastapi = ">=0.115.0,<0.116.0"
 uvicorn = {version=">=0.32.0,<0.33.0", extras=["standard"]}
 
 [tool.poetry.scripts]
-yww = "yww.cli:main"
+voxlift = "voxlift.cli:app"
+vox = "voxlift.cli:app"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.5"

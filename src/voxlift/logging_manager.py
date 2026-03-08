@@ -1,6 +1,6 @@
-# src/yww/logging_manager.py
+# src/voxlift/logging_manager.py
 """
-Structured JSON logging for YWW.
+Structured JSON logging for Voxlift.
 
 Design principles:
 1. All logs are JSON for easy parsing and analysis
@@ -14,14 +14,14 @@ import logging
 import os
 import sys
 import traceback
-from datetime import datetime
+from datetime import UTC, datetime
 from logging.handlers import RotatingFileHandler
 from typing import Any, Dict, Optional
 
 
 # Paths
 DEFAULT_LOG_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "logs")
-DEFAULT_LOG_FILE = os.path.join(DEFAULT_LOG_DIR, "yww.jsonl")  # JSON Lines format
+DEFAULT_LOG_FILE = os.path.join(DEFAULT_LOG_DIR, "voxlift.jsonl")  # JSON Lines format
 
 
 class JSONFormatter(logging.Formatter):
@@ -29,7 +29,7 @@ class JSONFormatter(logging.Formatter):
 
     def format(self, record: logging.LogRecord) -> str:
         log_entry = {
-            "ts": datetime.utcnow().isoformat() + "Z",
+            "ts": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
             "level": record.levelname,
             "module": record.name,
             "event": getattr(record, "event", "log"),

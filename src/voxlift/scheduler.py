@@ -1,4 +1,4 @@
-# src/yww/scheduler.py
+# src/voxlift/scheduler.py
 """
 Resource-aware job scheduler optimized for M1 Mac.
 

@@ -23,8 +23,8 @@ python3 -m venv .venv && source .venv/bin/activate
 pip install poetry && poetry install
 
 # Run web UI
-python -m src.yww.webapp
-# Open http://localhost:8765
+voxlift serve
+# Opens http://localhost:8765
 ```
 
 ## Requirements
@@ -38,28 +38,29 @@ python -m src.yww.webapp
 ### Web UI (Recommended)
 
 ```bash
-python -m src.yww.webapp
+voxlift serve
 ```
 
-Open `http://localhost:8765`, paste a YouTube URL, click Transcribe.
+Opens `http://localhost:8765` automatically. Paste a YouTube URL, click Transcribe.
 
 ### CLI
 
 ```bash
 # Process single video
-python -m src.yww.cli process -u "https://youtube.com/watch?v=..." -m small
+voxlift transcribe "https://youtube.com/watch?v=..." -m small
 
 # With time range
-python -m src.yww.cli process -u "URL" --start 1:30 --end 5:00
+voxlift transcribe "URL" --start 1:30 --end 5:00
 ```
 
 ## Output
 
 ```
 transcripts/
-├── index.json              # Metadata + full text (searchable)
 └── {Channel Name}/
     └── {Video Title} [id].srt
+
+transcripts_index.json      # Metadata + full text (searchable)
 ```
 
 ## Configuration

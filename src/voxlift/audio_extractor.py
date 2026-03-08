@@ -1,4 +1,4 @@
-# src/yww/audio_extractor.py
+# src/voxlift/audio_extractor.py
 """
 Lightweight audio extraction for transcription.
 

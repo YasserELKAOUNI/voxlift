@@ -1,4 +1,4 @@
-# src/yww/transcriber.py
+# src/voxlift/transcriber.py
 """
 Transcription module for Apple Silicon with two backends:
 - PyTorch Whisper (original, MPS-aware)
@@ -163,7 +163,7 @@ def _get_faster_model_with_fallback(model_size: str, compute_type: str, device: 
         raise
 
 
-def preload_model(model_size: str = "base", backend: str = "faster-whisper", compute_type: str = "int8_float16") -> None:
+def preload_model(model_size: str = "base", backend: str = "faster-whisper", compute_type: str = "int8") -> None:
     """Pre-load a model into cache (call at app startup to eliminate cold start)."""
     log_event(
         "transcriber",
@@ -258,7 +258,7 @@ def transcribe_audio(
     output_dir: Optional[str] = None,
     progress_callback: Optional[Callable[[str, Dict[str, Any]], None]] = None,
     backend: str = "faster-whisper",
-    compute_type: str = "int8_float16",
+    compute_type: str = "int8",
     num_workers: int = 2,
 ) -> Dict[str, Any]:
     """

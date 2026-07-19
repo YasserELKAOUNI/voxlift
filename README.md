@@ -53,6 +53,16 @@ voxlift transcribe "https://youtube.com/watch?v=..." -m small
 voxlift transcribe "URL" --start 1:30 --end 5:00
 ```
 
+### Video Archive Helper
+
+To archive a YouTube video as an MP4 in `~/Documents/5_Notes/<Uploader>/`:
+
+```bash
+python tools/download_video.py "https://www.youtube.com/watch?v=..."
+```
+
+See `docs/video_download_procedure.md` for the exact `yt-dlp`/`ffmpeg` procedure and fallback path when native 480p is not available.
+
 ## Output
 
 ```
